@@ -1,0 +1,32 @@
+#include <opencv2/opencv.hpp>
+#include <string>
+#include <iostream>
+#include <math.h>
+
+using namespace cv;
+using namespace std;
+
+int main()
+{
+	char k[100];
+	cout << "请输入图片路径" << endl;
+	cin.getline(k, 100);
+	Mat img1 = imread(k, 1);
+	if (img1.empty())
+	{
+		cout << "error!" << endl;
+		return -1;
+	}
+	Mat img2;
+	Mat channel[] = { Mat_<uchar>(img1), Mat_<uchar>(img1), Mat_<uchar>(img1) };
+	split(img1, channel);//分离为三个通道
+	equalizeHist(channel[0], channel[0]);
+	equalizeHist(channel[1], channel[1]);
+	equalizeHist(channel[2], channel[2]);//对三个通道分别进行均衡化
+	merge(channel, 3, img2);//合并三个通道
+	imwrite("F://histequalization.tif", img2);
+	imshow("source image", img1);
+	imshow("histequalization color image", img2);
+	waitKey();
+	return 0;
+}
