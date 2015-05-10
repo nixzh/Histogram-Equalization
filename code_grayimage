@@ -1,0 +1,63 @@
+#include <opencv2/opencv.hpp>
+#include <iostream>
+#include <string>
+#include <math.h>
+
+using namespace std;
+using namespace cv;
+
+
+int main(int argc, char* argv[])
+{
+	char k[20];
+	double m, n;
+	cout << "请输入图片路径" << endl;
+	cin.getline(k, 20);
+	Mat img = imread(k, 0);//读取图像
+
+	if (img.empty())
+	{
+		cout << "error" << endl;
+	}
+	int bins = 256;
+	int hist_size[] = { bins };
+	float range[] = { 0, 256 };
+	const float* ranges[] = { range };
+	MatND hist,eqhist;
+	int channels[] = { 0 };
+	Mat eqimg(img.rows, img.cols, CV_8UC1);
+	calcHist(&img, 1, channels, Mat(), hist, 1, hist_size, ranges,true, false);//计算原图直方图
+	double max_val;
+	minMaxLoc(hist, 0, &max_val, 0, 0);
+	int scale = 1;
+	int hist_height = 256;
+	Mat hist_img = Mat::zeros(hist_height, bins*scale, CV_8UC1);
+	for (int i = 0; i<bins; i++)
+	{
+		float bin_val = hist.at<float>(i);
+		int intensity = cvRound(bin_val*hist_height / max_val);  
+		rectangle(hist_img, Point(i*scale, hist_height - 1), Point((i + 1)*scale - 1, hist_height - intensity), Scalar(255, 255, 255),1,8,0);
+	}
+	//直方图均衡
+	equalizeHist(img, eqimg);//均衡
+	calcHist(&eqimg, 1, channels, Mat(), eqhist, 1, hist_size, ranges, true, false);//计算均衡后的图像的直方图
+	double eq_max_val;
+	minMaxLoc(eqhist, 0, &eq_max_val, 0, 0);
+	Mat eqhist_img = Mat::zeros(hist_height, bins*scale, CV_8UC1);
+	for (int i = 0; i<bins; i++)
+	{
+		float bin_val = eqhist.at<float>(i);
+		int intensityeq = cvRound(bin_val*hist_height / eq_max_val);
+		rectangle(eqhist_img, Point(i*scale, hist_height - 1), Point((i + 1)*scale - 1, hist_height - intensityeq), Scalar(255, 255, 255), 1, 8, 0);
+	}
+	imwrite("F://原图.bmp", img);
+	imwrite("F://均衡化后图.bmp", eqimg);
+	imwrite("F://原图直方图.bmp", hist_img);
+	imwrite("F://均衡化后直方图.bmp", eqhist_img);//保存图像
+	imshow("原图", img);
+	imshow("均衡化后图", eqimg);
+	imshow("原图直方图", hist_img);
+	imshow("均衡化后直方图", eqhist_img);//显示图像
+	waitKey();
+	return 0;
+}
